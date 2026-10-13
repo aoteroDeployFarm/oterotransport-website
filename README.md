@@ -1,6 +1,6 @@
 # oterotransport-website
 
-Website for Otero Transport (oterotransporation.com). Next.js 16, TypeScript, Tailwind CSS 4,
+Website for Otero Transport (oterotransports.com). Next.js 16, TypeScript, Tailwind CSS 4,
 App Router, statically exported for Cloudflare Pages.
 
 ## Commands

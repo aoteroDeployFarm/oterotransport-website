@@ -43,7 +43,7 @@ export type Site = {
 
 export const site: Site = {
   name: "Otero Transport",
-  url: "https://oterotransporation.com",
+  url: "https://oterotransports.com",
   indexable: false,
   tagline: null,
   intro: null,
@@ -55,7 +55,7 @@ export const site: Site = {
   location: "Fort Collins, CO",
   contact: {
     phone: "720-361-9823",
-    email: "transport@oterotransporation.com",
+    email: "transport@oterotransports.com",
     address: null,
     hours: null,
   },
