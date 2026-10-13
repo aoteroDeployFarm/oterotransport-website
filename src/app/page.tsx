@@ -30,7 +30,7 @@ export default function HomePage() {
                 <p>{site.tagline}</p>
               ) : (
                 <Placeholder block>
-                  One-sentence description of what Otero Transport moves, for whom, and where.
+                  One-sentence description of what Otero Transports moves, for whom, and where.
                 </Placeholder>
               )}
             </div>
@@ -128,7 +128,7 @@ export default function HomePage() {
             <p>{site.serviceArea}</p>
           ) : (
             <Placeholder block>
-              The states, regions, or lanes Otero Transport actually serves.
+              The states, regions, or lanes Otero Transports actually serves.
             </Placeholder>
           )}
         </div>

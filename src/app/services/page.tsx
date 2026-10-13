@@ -40,7 +40,7 @@ export default function ServicesPage() {
             <p>{site.serviceArea}</p>
           ) : (
             <Placeholder block>
-              The states, regions, or lanes Otero Transport actually serves.
+              The states, regions, or lanes Otero Transports actually serves.
             </Placeholder>
           )}
         </div>

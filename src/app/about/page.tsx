@@ -53,7 +53,7 @@ export default function AboutPage() {
             site.about.map((paragraph) => <p key={paragraph}>{paragraph}</p>)
           ) : (
             <Placeholder block>
-              Company background: how Otero Transport got started and how it works with customers.
+              Company background: how Otero Transports got started and how it works with customers.
               Do not include years in business, fleet size, or safety claims unless they are
               verified.
             </Placeholder>

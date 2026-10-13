@@ -1,5 +1,5 @@
 /**
- * Single source of truth for Otero Transport's business facts and copy.
+ * Single source of truth for Otero Transports' business facts and copy.
  *
  * Every `null` / empty value below is an UNVERIFIED fact. The site renders a
  * visible "Needs review" marker in its place instead of inventing content.
@@ -17,7 +17,7 @@ export type Site = {
   url: string;
   /** Keep false while placeholders remain: emits noindex + a disallow-all robots.txt. */
   indexable: boolean;
-  /** One sentence: what Otero Transport moves, for whom, and where. */
+  /** One sentence: what Otero Transports moves, for whom, and where. */
   tagline: string | null;
   /** Short paragraph expanding on the tagline for the home page. */
   intro: string | null;
@@ -42,7 +42,7 @@ export type Site = {
 };
 
 export const site: Site = {
-  name: "Otero Transport",
+  name: "Otero Transports",
   url: "https://oterotransports.com",
   indexable: false,
   tagline: null,
