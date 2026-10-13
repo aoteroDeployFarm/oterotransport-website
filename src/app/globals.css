@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+/*
+ * Website palette.
+ * Contrast notes (WCAG): white on ink 15.6:1, yellow on ink 8.6:1, white on red 5.6:1,
+ * red on white 5.6:1, red on neutral 5.1:1, ink on neutral 14:1.
+ * Red on ink is only 2.8:1, so red is never used for text on dark surfaces.
+ */
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --color-ink: #202427;
+  --color-brand-red: #c62828;
+  --color-brand-red-hover: #a61f1f;
+  --color-brand-yellow: #e2be00;
+  --color-surface: #ffffff;
+  --color-neutral: #f4f4f1;
+}
+
+body {
+  background: var(--color-surface);
+  color: var(--color-ink);
+}
+
+/* Two-tone ring: yellow shows on ink and red surfaces, the ink inner ring on light ones. */
+:focus-visible {
+  outline: 3px solid var(--color-brand-yellow);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--color-ink);
+  border-radius: 2px;
+}
+
