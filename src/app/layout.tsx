@@ -28,12 +28,31 @@ export const metadata: Metadata = {
   },
 };
 
-// Only verified facts belong here: the name and the domain.
+// Only verified facts belong here: the name, domain, description, confirmed services, and
+// confirmed places served.
 const organizationJsonLd = {
   "@context": "https://schema.org",
   "@type": "Organization",
   name: site.name,
   url: site.url,
+  ...(site.tagline && { description: site.tagline }),
+  ...(site.areaServed.length > 0 && {
+    areaServed: site.areaServed.map((area) =>
+      area.type === "State"
+        ? { "@type": "State", name: area.name, description: area.description }
+        : {
+            "@type": "City",
+            name: area.name,
+            containedInPlace: { "@type": "State", name: area.state },
+          },
+    ),
+  }),
+  ...(site.services.length > 0 && {
+    makesOffer: site.services.map((service) => ({
+      "@type": "Offer",
+      itemOffered: { "@type": "Service", name: service.name, description: service.description },
+    })),
+  }),
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

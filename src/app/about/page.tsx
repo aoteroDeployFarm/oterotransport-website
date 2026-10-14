@@ -53,7 +53,7 @@ export default function AboutPage() {
             site.about.map((paragraph) => <p key={paragraph}>{paragraph}</p>)
           ) : (
             <Placeholder block>
-              Company background: how Otero Transports got started and how it works with customers.
+              Company background: how {site.name} got started and how it works with customers.
               Do not include years in business, fleet size, or safety claims unless they are
               verified.
             </Placeholder>
@@ -61,25 +61,27 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section aria-labelledby="credentials-heading" className="border-t border-ink/10 bg-neutral">
-        <div className={section}>
-          <SectionHeading id="credentials-heading">Operating authority</SectionHeading>
-          <dl className="mt-8 grid max-w-2xl gap-6 sm:grid-cols-2">
-            <div className={cardClass}>
-              <dt className={label}>USDOT number</dt>
-              <dd className="mt-2 text-lg">
-                {usdot ?? <Placeholder>USDOT number, if the company has one.</Placeholder>}
-              </dd>
-            </div>
-            <div className={cardClass}>
-              <dt className={label}>MC number</dt>
-              <dd className="mt-2 text-lg">
-                {mc ?? <Placeholder>MC number, if the company has one.</Placeholder>}
-              </dd>
-            </div>
-          </dl>
-        </div>
-      </section>
+      {(usdot || mc) && (
+        <section aria-labelledby="credentials-heading" className="border-t border-ink/10 bg-neutral">
+          <div className={section}>
+            <SectionHeading id="credentials-heading">Operating authority</SectionHeading>
+            <dl className="mt-8 grid max-w-2xl gap-6 sm:grid-cols-2">
+              {usdot && (
+                <div className={cardClass}>
+                  <dt className={label}>USDOT number</dt>
+                  <dd className="mt-2 text-lg">{usdot}</dd>
+                </div>
+              )}
+              {mc && (
+                <div className={cardClass}>
+                  <dt className={label}>MC number</dt>
+                  <dd className="mt-2 text-lg">{mc}</dd>
+                </div>
+              )}
+            </dl>
+          </div>
+        </section>
+      )}
 
       <ContactCta />
     </>

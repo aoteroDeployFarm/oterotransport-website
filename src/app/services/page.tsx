@@ -6,7 +6,14 @@ import { SectionHeading } from "@/components/SectionHeading";
 import { ServiceList } from "@/components/ServiceList";
 import { site } from "@/content/site";
 
-const description = `Transportation services offered by ${site.name}.`;
+const namedCities = site.areaServed.flatMap((area) =>
+  area.type === "City" ? [`${area.name}, ${area.stateCode}`] : [],
+);
+
+const description =
+  site.location && site.serviceRadiusMiles
+    ? `Small-load delivery, move-out hauling, and dump runs, primarily within a ${site.serviceRadiusMiles}-mile radius of ${site.location}${namedCities.length > 0 ? `, including ${namedCities.join(" and ")}` : ""}.`
+    : `Small-load delivery, move-out hauling, and dump runs from ${site.name}.`;
 
 export const metadata: Metadata = {
   title: "Services",
@@ -40,7 +47,7 @@ export default function ServicesPage() {
             <p>{site.serviceArea}</p>
           ) : (
             <Placeholder block>
-              The states, regions, or lanes Otero Transports actually serves.
+              The states, regions, or lanes {site.name} actually serves.
             </Placeholder>
           )}
         </div>

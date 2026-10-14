@@ -30,7 +30,7 @@ export default function HomePage() {
                 <p>{site.tagline}</p>
               ) : (
                 <Placeholder block>
-                  One-sentence description of what Otero Transports moves, for whom, and where.
+                  One-sentence description of what {site.name} moves, for whom, and where.
                 </Placeholder>
               )}
             </div>
@@ -119,7 +119,7 @@ export default function HomePage() {
       <section aria-labelledby="area-heading" className={section}>
         <SectionHeading id="area-heading">Where we operate</SectionHeading>
         <div className="mt-6 max-w-3xl text-lg">
-          {site.location && (
+          {site.location && !site.serviceArea && (
             <p className="mb-4">
               {site.name} is based in {site.location}.
             </p>
@@ -128,7 +128,7 @@ export default function HomePage() {
             <p>{site.serviceArea}</p>
           ) : (
             <Placeholder block>
-              The states, regions, or lanes Otero Transports actually serves.
+              The states, regions, or lanes {site.name} actually serves.
             </Placeholder>
           )}
         </div>

@@ -10,9 +10,8 @@ export function ServiceList({ headingLevel = "h3" }: { headingLevel?: "h2" | "h3
     return (
       <div className={cardClass}>
         <Placeholder block>
-          List each service Otero Transports actually provides (name and a one or two sentence
-          description), for example the type of freight or passengers moved and the equipment
-          used. No services are shown until they are confirmed.
+          List each service {site.name} actually provides (name and a one or two sentence
+          description). No services are shown until they are confirmed.
         </Placeholder>
       </div>
     );
