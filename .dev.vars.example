@@ -1,0 +1,8 @@
+# Local settings for `npx wrangler@4 pages dev out`. Never commit .dev.vars.
+# `npm run gmail:authorize` fills in the first four values for you.
+GMAIL_CLIENT_ID=
+GMAIL_CLIENT_SECRET=
+GMAIL_REFRESH_TOKEN=
+QUOTE_FROM_EMAIL="Otero Transportation Website <transport@oterotransports.com>"
+# Optional; defaults to the business email in src/content/site.ts.
+QUOTE_TO_EMAIL=

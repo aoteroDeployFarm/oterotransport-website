@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { site, telHref } from "@/content/site";
+import { quoteHref, site, telHref } from "@/content/site";
 import { SectionHeading } from "./SectionHeading";
 
 const base =
@@ -7,23 +7,40 @@ const base =
 const primary = `${base} bg-brand-red text-white hover:bg-brand-red-hover`;
 const secondary = `${base} border-2 border-current hover:bg-current/10`;
 
-/** Contact actions. Direct call / email buttons appear only once those details are verified. */
-export function ContactActions({ linkToContact = true }: { linkToContact?: boolean }) {
-  const { phone, email } = site.contact;
+/**
+ * Contact actions. "Get a Quote" is the primary action when shown; direct call / email
+ * buttons appear only once those details are verified.
+ */
+export function ContactActions({
+  quote = true,
+  email: showEmail = true,
+  linkToContact = true,
+}: {
+  quote?: boolean;
+  email?: boolean;
+  linkToContact?: boolean;
+}) {
+  const { phone } = site.contact;
+  const email = showEmail ? site.contact.email : null;
   return (
     <div className="flex flex-wrap gap-3">
+      {quote && (
+        <Link href={quoteHref} className={primary}>
+          Get a Quote
+        </Link>
+      )}
       {phone && (
-        <a href={telHref(phone)} className={primary}>
+        <a href={telHref(phone)} className={quote ? secondary : primary}>
           Call {phone}
         </a>
       )}
       {email && (
-        <a href={`mailto:${email}`} className={phone ? secondary : primary}>
+        <a href={`mailto:${email}`} className={quote || phone ? secondary : primary}>
           Email us
         </a>
       )}
       {linkToContact && (
-        <Link href="/contact/" className={phone || email ? secondary : primary}>
+        <Link href="/contact/" className={quote || phone || email ? secondary : primary}>
           Contact us
         </Link>
       )}
@@ -41,7 +58,7 @@ export function ContactCta() {
             Get in touch with {site.owner ? site.owner.name : site.name} directly.
           </p>
         </div>
-        <ContactActions />
+        <ContactActions linkToContact={false} />
       </div>
     </section>
   );

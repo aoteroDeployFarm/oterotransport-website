@@ -42,3 +42,7 @@ next-env.d.ts
 
 # local Claude preview configuration
 /.claude/launch.json
+
+# Cloudflare Pages Functions local secrets
+.dev.vars
+.wrangler/

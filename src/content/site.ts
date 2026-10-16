@@ -44,9 +44,6 @@ export type Site = {
     /** US number in display format, e.g. "555-555-0100". */
     phone: string | null;
     email: string | null;
-    /** Mailing or office address, one string per line. */
-    address: string[] | null;
-    hours: string | null;
   };
 };
 
@@ -97,16 +94,17 @@ export const site: Site = {
   contact: {
     phone: "720-361-9823",
     email: "transport@oterotransports.com",
-    address: null,
-    hours: null,
   },
 };
+
+export const quoteHref = "/quote/";
 
 export const nav = [
   { href: "/", label: "Home" },
   { href: "/services/", label: "Services" },
   { href: "/about/", label: "About" },
   { href: "/contact/", label: "Contact" },
+  { href: quoteHref, label: "Get a Quote" },
 ] as const;
 
 /** Builds an E.164 tel: link, assuming a US number when no country code is given. */

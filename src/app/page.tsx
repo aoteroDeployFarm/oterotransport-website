@@ -35,7 +35,7 @@ export default function HomePage() {
               )}
             </div>
             <div className="mt-8">
-              <ContactActions />
+              <ContactActions email={false} linkToContact={false} />
             </div>
           </div>
           {/* Decorative brand artwork, not a depiction of actual equipment. WebP with PNG fallback. */}

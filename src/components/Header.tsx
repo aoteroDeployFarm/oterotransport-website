@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { nav, site, telHref } from "@/content/site";
+import { site, telHref } from "@/content/site";
+import { MainNav } from "./MainNav";
 
 export function Header() {
   const { phone } = site.contact;
@@ -22,24 +23,11 @@ export function Header() {
           {site.name}
         </Link>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-          <nav aria-label="Main">
-            <ul className="-mx-2 flex flex-wrap items-center text-sm font-medium sm:text-base">
-              {nav.map((item) => (
-                <li key={item.href}>
-                  <Link
-                    href={item.href}
-                    className="block rounded px-2 py-2 text-neutral decoration-brand-yellow decoration-2 underline-offset-8 hover:text-white hover:underline sm:px-3"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          <MainNav />
           {phone && (
             <a
               href={telHref(phone)}
-              className="hidden rounded bg-brand-red px-4 py-2 text-sm font-semibold text-white hover:bg-brand-red-hover md:inline-flex"
+              className="hidden rounded border-2 border-neutral px-4 py-1.5 text-sm font-semibold text-white hover:bg-white/10 md:inline-flex"
             >
               Call {phone}
             </a>

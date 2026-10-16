@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "gmail:authorize": "node scripts/gmail-authorize.mjs"
   },
   "dependencies": {
     "next": "16.4.0",

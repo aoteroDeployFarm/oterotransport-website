@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Wrangler's local Pages Functions build output.
+    ".wrangler/**",
   ]),
 ]);
 

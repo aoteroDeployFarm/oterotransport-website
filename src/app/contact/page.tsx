@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { PageHeader } from "@/components/PageHeader";
 import { Placeholder } from "@/components/Placeholder";
 import { SectionHeading } from "@/components/SectionHeading";
 import { cardClass } from "@/components/ServiceList";
-import { site, telHref } from "@/content/site";
+import { quoteHref, site, telHref } from "@/content/site";
 
-const description = `How to reach ${site.name}.`;
+const description = `Reach ${site.name} by phone or email.`;
 
 export const metadata: Metadata = {
   title: "Contact",
@@ -20,7 +21,7 @@ const linkClass =
   "font-semibold underline decoration-brand-red decoration-2 underline-offset-4 hover:text-brand-red";
 
 export default function ContactPage() {
-  const { phone, email, address, hours } = site.contact;
+  const { phone, email } = site.contact;
   return (
     <>
       <PageHeader title="Contact">
@@ -58,47 +59,14 @@ export default function ContactPage() {
                 )}
               </dd>
             </div>
-            <div className={cardClass}>
-              <dt className={label}>Location</dt>
-              <dd className="mt-2 text-lg">
-                {address ? (
-                  <address className="not-italic">
-                    {address.map((line) => (
-                      <span key={line} className="block">
-                        {line}
-                      </span>
-                    ))}
-                  </address>
-                ) : (
-                  <>
-                    {site.location && (
-                      <span className="block font-semibold">{site.location}</span>
-                    )}
-                    <span className="mt-3 block">
-                      <Placeholder>Office or mailing address, if it should be public.</Placeholder>
-                    </span>
-                  </>
-                )}
-              </dd>
-            </div>
-            <div className={cardClass}>
-              <dt className={label}>Hours</dt>
-              <dd className="mt-2 text-lg">
-                {hours ?? <Placeholder>Office or dispatch hours.</Placeholder>}
-              </dd>
-            </div>
           </dl>
-        </div>
-      </section>
-
-      <section aria-labelledby="quote-heading" className={section}>
-        <SectionHeading id="quote-heading">Request a quote</SectionHeading>
-        <div className="mt-6 max-w-3xl">
-          <Placeholder block>
-            No quote form is published yet because no approved form submission service is
-            configured for this site. Until one is chosen, quote requests go through the phone and
-            email above.
-          </Placeholder>
+          <p className="mt-8 text-lg">
+            Need delivery or hauling pricing?{" "}
+            <Link href={quoteHref} className={linkClass}>
+              Get a Quote
+            </Link>
+            .
+          </p>
         </div>
       </section>
     </>
