@@ -32,15 +32,84 @@ after Gmail accepts the message; otherwise the form shows a failure message, kee
 visitor's entries, and points to the phone number and email. It never logs request contents
 or credentials.
 
-Spam and abuse checks: same-origin requests only, JSON only, 16 KB body limit, a hidden
-honeypot field, a minimum fill time, and server-side validation. The form blocks double
-submits, and the function skips a submission ID it has already sent (best effort: Gmail has
-no idempotency key, so a retry after a lost response can still send a second copy).
+After the business notification is accepted, the function sends the customer a short
+acknowledgment from `Otero Transportation <transport@oterotransports.com>` with
+`Reply-To: transport@oterotransports.com`. It contains fixed wording, the request reference
+(a UUID the form generates), and the business phone number, and nothing the visitor typed.
+The business notification is the primary result: if the acknowledgment fails, the form
+still reports success and the log records only a failure category and the reference.
 
-### Delivery setup (not active yet)
+### Abuse protection
 
-Until the variables below are set, the endpoint answers 503 and the form says online quote
-requests are unavailable. Nothing is sent.
+Because the acknowledgment goes to a visitor-supplied address, the form could otherwise be
+scripted to send mail to strangers. Checks, from weakest to strongest:
+
+- Same-origin requests only, JSON only, 16 KB body limit, server-side validation, and a
+  UUID-only reference. These stop casual misuse but are easy to forge outside a browser.
+- A hidden honeypot field and a minimum fill time. These stop simple bots; the fill time is
+  reported by the browser and can be faked.
+- **Cloudflare Turnstile** (when configured): every submission needs a token that the
+  function verifies with Cloudflare. Tokens are single use, so each submission costs the
+  sender a fresh challenge.
+- **`QUOTE_LIMITS` KV store** (when bound): about 5 submissions per IP address per hour, one
+  acknowledgment per customer address per 24 hours, and duplicate detection by reference for
+  24 hours. Keys hold SHA-256 hashes, never raw IP or email addresses.
+
+**Acknowledgments are sent only when Turnstile is enforced and `QUOTE_LIMITS` is bound.**
+Without both, business notifications work as before and acknowledgments are skipped.
+
+**Acknowledgment suppression.** A customer address receives at most one acknowledgment per
+24 hours. Later requests from the same address in that window still reach the business
+inbox, and the success screen simply omits the "A confirmation email was sent" line.
+
+**What the KV limits do and do not guarantee.** Workers KV is eventually consistent and has
+no atomic increment:
+
+- Counters are read, then written. Requests that arrive at the same moment can read the same
+  value, so a burst can exceed 5 per hour, and parallel requests for one address can each
+  send an acknowledgment before either record is visible.
+- Writes can take up to about 60 seconds to be seen at other Cloudflare locations.
+- If KV is unavailable, the IP limit and duplicate check fail open (the notification is
+  still sent); the acknowledgment fails closed (it is skipped).
+
+So the KV limits stop sustained or sequential abuse, while Turnstile bounds bursts: every
+request needs its own solved challenge. For a low-volume small-business form this is a
+reasonable level of protection. If abuse ever appears, stronger options are a Cloudflare WAF
+rate limiting rule on `/api/quote` (enforced at the edge) or a Durable Object for exact,
+atomic counters.
+
+**Costs** (check Cloudflare's current pricing before provisioning): Turnstile is free. Workers
+KV on the free plan allows 100,000 reads and 1,000 writes per day; each delivered request
+uses up to three writes, so about 300 requests per day fit. Pages Functions requests count
+toward the free 100,000 Workers requests per day. Gmail sending uses the existing Workspace
+mailbox, which allows about 2,000 messages per day.
+
+**Activation sequence** (the production form keeps working at every step):
+
+1. Create the Turnstile widget (Managed mode, hostnames `oterotransports.com`,
+   `www.oterotransports.com`, and `oterotransport-website.pages.dev`; `www` is listed only as a
+   safety net in case its redirect is ever off) and the `QUOTE_LIMITS` KV namespace.
+2. In the Pages project, add the Production secret `TURNSTILE_SECRET_KEY` and the Production
+   KV binding `QUOTE_LIMITS`. These take effect only on the next deployment, and the function
+   enforces Turnstile only when the build also contains the site key, so neither step can
+   lock out the current form.
+3. Put the public site key in `turnstileSiteKey` in `src/content/site.ts`, then commit and
+   deploy once. That deployment turns on the widget, the check, the limits, and
+   acknowledgments together.
+4. Submit a real test on the live `/quote/` page and confirm both emails.
+5. To roll back, redeploy the previous deployment from the Pages dashboard, or set
+   `turnstileSiteKey` back to `null` and deploy.
+
+For local tests, use Cloudflare's published Turnstile testing keys
+(developers.cloudflare.com/turnstile/troubleshooting/testing/) in place of the real site key
+and secret, and restore the real keys afterwards. The real widget does not run on
+`localhost`. The `pages-functions` preview binds a local `QUOTE_LIMITS` with
+`--kv QUOTE_LIMITS`.
+
+### Delivery setup
+
+The endpoint answers 503 and the form says online quote requests are unavailable whenever
+the Gmail variables below are missing. Production has them set.
 
 Business mail is on Google Workspace (Google MX, SPF `include:_spf.google.com`, and the
 `google._domainkey` DKIM record). Notifications are sent through the same Workspace, so no
@@ -83,6 +152,7 @@ other mail provider or DNS record is needed.
    | `GMAIL_REFRESH_TOKEN` | Secret | Refresh token from step 3 |
    | `QUOTE_FROM_EMAIL` | Text | e.g. `Otero Transportation Website <transport@oterotransports.com>` |
    | `QUOTE_TO_EMAIL` | Text | Optional. Defaults to the email in `src/content/site.ts` |
+   | `TURNSTILE_SECRET_KEY` | Secret | See [Abuse protection](#abuse-protection) |
 
    Variables apply to the next deployment, so set them before the release deploys.
 
@@ -118,7 +188,7 @@ Verify with a real submission before deploying the quote page:
 
 ```sh
 npm run build
-npx wrangler@4 pages dev out
+npx wrangler@4 pages dev out --kv QUOTE_LIMITS
 ```
 
 Local variables go in `.dev.vars` (gitignored); `.dev.vars.example` lists the names.
@@ -130,10 +200,25 @@ Local variables go in `.dev.vars` (gitignored); `.dev.vars.example` lists the na
 - Build output directory: `out`
 - Root directory: `/`
 - Node version: read from `.node-version`
-- Environment variables: see [Delivery setup](#delivery-setup-not-active-yet)
+- Environment variables: see [Delivery setup](#delivery-setup) and
+  [Abuse protection](#abuse-protection)
+- Bindings: KV namespace `QUOTE_LIMITS` (see [Abuse protection](#abuse-protection))
 - Functions: `functions/` is deployed automatically with the build output
 
 `public/_headers` sets security and caching headers.
+
+### Domains
+
+`https://oterotransports.com` is the canonical address (`site.url`, canonical links, and the
+sitemap all use it). `www.oterotransports.com` is attached to the Pages project as a custom
+domain so it has a certificate, and a zone **Redirect Rule** sends it to the apex:
+
+- When: `(http.host eq "www.oterotransports.com")`
+- Then: dynamic redirect to `concat("https://oterotransports.com", http.request.uri.path)`,
+  status 301, **preserve query string** on.
+
+The rule only matches `www`, and nothing redirects the apex, so it cannot loop. Pages
+`_redirects` cannot do this because it matches paths, not hostnames.
 
 ## Known dependency findings
 

@@ -22,6 +22,11 @@ export type Site = {
   url: string;
   /** Keep false while placeholders remain: emits noindex + a disallow-all robots.txt. */
   indexable: boolean;
+  /**
+   * Public Cloudflare Turnstile site key for the quote form, or null when not set up. The
+   * check is enforced only when this and the TURNSTILE_SECRET_KEY Pages secret are both set.
+   */
+  turnstileSiteKey: string | null;
   /** One sentence: what the business moves, for whom, and where. */
   tagline: string | null;
   /** Short paragraph expanding on the tagline for the home page. */
@@ -54,6 +59,7 @@ export const site: Site = {
   name: "Otero Transportation",
   url: "https://oterotransports.com",
   indexable: false,
+  turnstileSiteKey: "0x4AAAAAAFYoyGEj26aN72dB",
   tagline:
     "Otero Transportation provides small-load deliveries, move-out hauling, and dump runs for homeowners, renters, and local businesses.",
   intro: companyIntro,

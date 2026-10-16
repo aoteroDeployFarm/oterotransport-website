@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { site, telHref } from "@/content/site";
+import { TurnstileWidget } from "./TurnstileWidget";
 import {
   EMPTY_QUOTE,
   LIMITS,
@@ -17,7 +18,23 @@ import {
   type QuotePayload,
 } from "@/lib/quote";
 
-type Status = "idle" | "submitting" | "success" | "failed" | "unavailable" | "rejected";
+type Status =
+  | "idle"
+  | "submitting"
+  | "success"
+  | "failed"
+  | "unavailable"
+  | "rejected"
+  | "verification"
+  | "rate_limited";
+
+/** Server error codes that map directly to a status with its own message. */
+const ERROR_STATUS: Record<string, Status> = {
+  unavailable: "unavailable",
+  rejected: "rejected",
+  verification_failed: "verification",
+  rate_limited: "rate_limited",
+};
 
 /** Matches the server's minimum fill time so quick, legitimate submissions are not rejected. */
 const MIN_FILL_MS = 3000;
@@ -69,10 +86,15 @@ const buttonClass =
 const linkClass =
   "font-semibold underline decoration-brand-red decoration-2 underline-offset-4 hover:text-brand-red";
 
+/** A random UUID, the only reference format the server accepts. */
 function newSubmissionId() {
-  return typeof crypto !== "undefined" && "randomUUID" in crypto
-    ? crypto.randomUUID()
-    : `${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+  const { crypto } = globalThis;
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  bytes[6] = (bytes[6] & 0x0f) | 0x40;
+  bytes[8] = (bytes[8] & 0x3f) | 0x80;
+  const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
 function controlBorder(error?: string) {
@@ -104,6 +126,10 @@ export function QuoteForm() {
   const [showSummary, setShowSummary] = useState(false);
   const [status, setStatus] = useState<Status>("idle");
   const [honeypot, setHoneypot] = useState("");
+  const [acknowledged, setAcknowledged] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const [turnstileReset, setTurnstileReset] = useState(0);
+  const turnstileSiteKey = site.turnstileSiteKey;
 
   const startedAt = useRef(0);
   const submissionId = useRef("");
@@ -174,6 +200,11 @@ export function QuoteForm() {
     setErrors({});
     setShowSummary(false);
 
+    if (turnstileSiteKey && !turnstileToken) {
+      setStatus("verification");
+      return;
+    }
+
     submitting.current = true;
     setStatus("submitting");
     const payload: QuotePayload = {
@@ -181,6 +212,7 @@ export function QuoteForm() {
       submissionId: submissionId.current,
       startedAt: startedAt.current,
       website: honeypot,
+      ...(turnstileToken ? { turnstileToken } : {}),
     };
 
     try {
@@ -203,26 +235,24 @@ export function QuoteForm() {
 
       const body = (await response.json().catch(() => null)) as {
         ok?: boolean;
+        acknowledged?: boolean;
         error?: string;
         fields?: QuoteErrors;
       } | null;
 
       if (response.ok && body?.ok === true) {
+        setAcknowledged(body.acknowledged === true);
         setStatus("success");
         return;
       }
+      // A Turnstile token works once, so any unsuccessful attempt needs a fresh check.
+      if (turnstileSiteKey) setTurnstileReset((count) => count + 1);
       if (body?.error === "invalid" && body.fields && Object.keys(body.fields).length > 0) {
         setStatus("idle");
         showErrors(body.fields);
         return;
       }
-      setStatus(
-        body?.error === "unavailable"
-          ? "unavailable"
-          : body?.error === "rejected"
-            ? "rejected"
-            : "failed",
-      );
+      setStatus((body?.error && ERROR_STATUS[body.error]) || "failed");
     } catch {
       setStatus("failed");
     } finally {
@@ -236,6 +266,8 @@ export function QuoteForm() {
     setShowSummary(false);
     startedAt.current = Date.now();
     submissionId.current = newSubmissionId();
+    setAcknowledged(false);
+    setTurnstileToken(null);
     setStatus("idle");
   }
 
@@ -273,6 +305,12 @@ export function QuoteForm() {
           {values.contactMethod === "phone" ? "phone" : "email"}. Your request does not confirm a
           booking; pricing and availability are confirmed after review.
         </p>
+        {acknowledged && (
+          <p className="mt-3">
+            A confirmation email was sent to{" "}
+            <span className="font-semibold [overflow-wrap:anywhere]">{values.email}</span>.
+          </p>
+        )}
         <button
           type="button"
           onClick={reset}
@@ -618,21 +656,35 @@ export function QuoteForm() {
       </div>
 
       <div className="space-y-4">
+        {turnstileSiteKey && (
+          <TurnstileWidget
+            siteKey={turnstileSiteKey}
+            resetKey={turnstileReset}
+            onToken={(token) => {
+              setTurnstileToken(token);
+              if (token && status === "verification") setStatus("idle");
+            }}
+          />
+        )}
         <div role="status" aria-live="polite">
           {busy && <p className="text-base">Sending your request…</p>}
         </div>
         <div role="alert">
-          {(status === "failed" || status === "unavailable" || status === "rejected") && (
+          {status !== "idle" && status !== "submitting" && (
             <div className="rounded border-2 border-brand-red bg-surface p-5">
               <p className="font-semibold">
-                {status === "rejected"
+                {status === "rejected" || status === "verification"
                   ? "We couldn’t accept this request."
                   : "We couldn’t send your request."}
               </p>
               <p className="mt-2">
                 {status === "unavailable"
                   ? "Online quote requests are not available right now. "
-                  : "Your details are still filled in, so you can try again in a few minutes. "}
+                  : status === "verification"
+                    ? "Please complete the verification check above and submit again. "
+                    : status === "rate_limited"
+                      ? "Too many requests came from your connection recently. Please try again later. "
+                      : "Your details are still filled in, so you can try again in a few minutes. "}
                 You can also {fallback}.
               </p>
             </div>

@@ -6,3 +6,6 @@ GMAIL_REFRESH_TOKEN=
 QUOTE_FROM_EMAIL="Otero Transportation Website <transport@oterotransports.com>"
 # Optional; defaults to the business email in src/content/site.ts.
 QUOTE_TO_EMAIL=
+# Optional; enables the Turnstile check (use with turnstileSiteKey in src/content/site.ts).
+# For local tests, use Cloudflare's Turnstile testing keys (see the README), never in production.
+TURNSTILE_SECRET_KEY=
